@@ -9,6 +9,19 @@
   "scripts": {
     "test": "NODE_ENV=test mocha test/*.js"
   },
+  "keywords": [
+    "double-entry",
+    "accounting",
+    "account",
+    "finance",
+    "sequelize",
+    "postgres",
+    "sqlite",
+    "mysql",
+    "forex",
+    "foreign-exchange",
+    "exchange-rates"
+  ],
   "dependencies": {
     "async": "^2.5.0",
     "bignumber.js": "^4.0.4",
