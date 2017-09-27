@@ -1,0 +1,22 @@
+{
+  "name": "ale",
+  "version": "0.1.0",
+  "description": "Double accounting package based on node.js + sequelize",
+  "main": "index.js",
+  "repository": "git@github.com:CjS77/ale.git",
+  "author": "Cayle Sharrock <cayle@coinbase.com>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "mocha test/*.js"
+  },
+  "dependencies": {
+    "async": "^2.5.0",
+    "bignumber.js": "^4.0.4",
+    "sequelize": "^4.11.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.5.3",
+    "pg": "^7.3.0",
+    "pg-hstore": "^2.3.2"
+  }
+}

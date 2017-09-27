@@ -57,3 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+### JetBrains template
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
+.idea
+*.iml
+out/
+
