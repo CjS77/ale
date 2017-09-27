@@ -1,5 +1,5 @@
 {
-  "name": "ale",
+  "name": "a.l.e",
   "version": "0.1.0",
   "description": "Double accounting package based on node.js + sequelize",
   "main": "index.js",
