@@ -7,7 +7,7 @@
   "author": "Cayle Sharrock <cayle@coinbase.com>",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "mocha test/*.js"
+    "test": "NODE_ENV=test mocha test/*.js"
   },
   "dependencies": {
     "async": "^2.5.0",
