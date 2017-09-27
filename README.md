@@ -14,6 +14,23 @@ Each transaction in ALE operates on a single *account*. Accounts are arbitrary s
 
 In theory, the account names are entirely arbitrary, but you will likely want to use traditional accounting sections and subsections like assets, expenses, income, accounts receivable, accounts payable, etc. But, in the end, how you structure the accounts is entirely up to you. Sub-accounts are also not matched explicitly, but by comparing the account name to query against the beginning of the account name. Thus `Trades` will match `Trades:USD`, but not `Assets:Trades`.
 
+
+## Configuration
+
+ALE tries to be agnostic as to which RDMS you have running on the back-end. Therefore, you need to ensure that the relevant DB bindings are installed and part of your `package.json` file.
+
+For PostgreSQL, this would entail
+
+`yarn add pg`
+
+You *must* set an `ALE_CONNECTION` environment variable which holds the connection string to connect to the underlying database. To date,
+ALE has been tested against PostgreSQL, but any DB supported by Sequelize (SQLite, MySQL etc) should work.
+
+`export ALE_CONNECTION=postres://ale_user@localhost:5432/trading_db`
+
+The user and database must exist before importing ALE. For an example of how to ensure this in code (for PostgreSQL), see the test setup function.
+
+
 ## Coding Standards
 
 ALE is written in JavaScript. All database queries return promise objects instead of using the traditional node `function(err, result)`callback.
