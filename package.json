@@ -25,6 +25,7 @@
   "dependencies": {
     "async": "^2.5.0",
     "bignumber.js": "^4.0.4",
+    "express": "4.16.2",
     "sequelize": "^4.11.0"
   },
   "devDependencies": {
