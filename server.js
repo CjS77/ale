@@ -13,11 +13,27 @@
  *
  */
 
-const router = require('express').Router();
-const meta = require('../info');
+const swaggerRoutes = require('swagger-routes');
+const express = require('express');
+const app = express();
 
-router.get('/', (req, res) => {
-    res.json(meta)
+const port = process.env.ALE_PORT || 8813;
+
+swaggerRoutes(app, {
+    api: './spec/swagger.yaml',
+    handlers:  './handlers/',
+    authorizers: './handlers/security'
 });
 
-module.exports = router;
+app.listen(port, (err) => {
+    if (err) {
+        console.error(err);
+        process.exit(1);
+    }
+    console.log(`Listening on port ${port}`);
+});
+
+process.on('SIGTERM', () => {
+    console.log('Shutdown signal received. Bye');
+    process.exit(0);
+});
