@@ -14,7 +14,6 @@
     "test:swagger": "swagger-repo validate",
     "start": "gulp serve",
     "deploy-branch": "node ./scripts/deploy-branch.js"
-
   },
   "keywords": [
     "double-entry",
@@ -32,7 +31,6 @@
   "dependencies": {
     "async": "^2.5.0",
     "bignumber.js": "^4.0.4",
-    "sequelize": "^4.11.0",
     "bower": "^1.7.7",
     "connect": "^3.4.1",
     "cors": "^2.7.1",
@@ -44,6 +42,8 @@
     "shelljs": "^0.7.0",
     "swagger-repo": "^1.0.0",
     "swagger-ui": "^2.1.4"
+    "express": "4.16.2",
+    "sequelize": "^4.11.0"
   },
   "devDependencies": {
     "mocha": "^3.5.3",
