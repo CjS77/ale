@@ -1,0 +1,10 @@
+{
+  "generator-openapi-repo": {
+    "importExistingSpec": false,
+    "name": "ale",
+    "repo": "CjS77/ale",
+    "splitSpec": false,
+    "samples": true,
+    "installSwaggerUI": true
+  }
+}

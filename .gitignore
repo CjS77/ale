@@ -63,3 +63,5 @@ typings/
 *.iml
 out/
 
+# Dir for API portal deploy
+web_deploy
