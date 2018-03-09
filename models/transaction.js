@@ -22,15 +22,12 @@ const { CURRENCY_LARGE } = require('./types');
 Transaction = sequelize.define('transaction', {
     credit: { type: CURRENCY_LARGE, validate: { isDecimal: true }, defaultValue: 0.0 },
     debit: { type: CURRENCY_LARGE, validate: { isDecimal: true }, defaultValue: 0.0 },
-    exchange_rate: { type: CURRENCY_LARGE, validate: { isDecimal: true }, defaultValue: 1.0 },
+    exchangeRate: { type: CURRENCY_LARGE, validate: { isDecimal: true }, defaultValue: 1.0 },
     currency: { type: Sequelize.STRING, defaultValue: 'USD', notNull: true },
-    accounts: Sequelize.STRING,
-    book: Sequelize.STRING,
-    memo: Sequelize.TEXT,
+    account: Sequelize.STRING,
     timestamp: { type: Sequelize.DATE, validate: { isDate: true }, default: Date.now },
     voided: { type: Sequelize.BOOLEAN, default: false },
-    void_reason: Sequelize.STRING,
-    approved: { type: Sequelize.BOOLEAN, default: true }
+    voidReason: Sequelize.STRING,
 }, {});
 
 /**
@@ -38,18 +35,15 @@ Transaction = sequelize.define('transaction', {
  */
 Transaction.prototype.values = function() {
     return {
-        id: this.id,
-        credit: +this.credit,
-        debit: +this.debit,
-        exchange_rate: +this.exchange_rate,
-        currency: this.currency,
-        accounts: this.accounts,
-        book: this.book,
-        memo: this.memo,
-        timestamp: new Date(this.timestamp),
-        voided: this.voided,
-        void_reason: this.void_reason,
-        approved: this.approved,
+        id: this.getDataValue('id'),
+        credit: +this.getDataValue('credit'),
+        debit: +this.getDataValue('debit'),
+        exchange_rate: +this.getDataValue('exchangeRate'),
+        currency: this.getDataValue('currency'),
+        account: this.getDataValue('account'),
+        timestamp: new Date(this.getDataValue('timestamp')),
+        voided: this.getDataValue('voided'),
+        voidReason: this.getDataValue('voidReason'),
     };
 };
 

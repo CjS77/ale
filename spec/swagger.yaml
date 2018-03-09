@@ -146,6 +146,9 @@ definitions:
 
   Book:
     type: object
+    required:
+      - id
+      - baseCurrency
     properties:
       id:
         description: The id, or name of the book
@@ -190,6 +193,10 @@ definitions:
 
   Transaction:
     type: object
+    required:
+      - account
+      - description
+      - value
     properties:
       account:
         description: The account this transaction is reflected on

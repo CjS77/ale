@@ -14,9 +14,10 @@
 
 const Sequelize = require('sequelize');
 const conn = process.env.ALE_CONNECTION;
+const { AleError, codes } = require('../lib/errors');
 
 if (!conn) {
-    throw new Error('ALE_CONNECTION envar is not set, cannot connect to database');
+    throw new AleError('ALE_CONNECTION envar is not set, cannot connect to database', codes.DatabaseConnectionError);
 }
 
 const options = process.env.ALE_DEBUG === 'true' ? { logging: console.log } : { logging: null };

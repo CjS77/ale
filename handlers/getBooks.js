@@ -5,6 +5,6 @@
  * 
  */
 exports.handler = function getBooks(req, res, next) {
-  res.send('getBooks')
+  res.send('getBooks');
   next()
-}
+};

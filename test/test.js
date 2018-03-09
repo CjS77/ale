@@ -13,174 +13,172 @@
  */
 
 const assert = require('assert');
+const {codes} = require('../lib/errors');
+
 let Book;
 describe('ALE', () => {
-    before((done) => {
+    let bookZAR, bookUSD;
+    
+    before(() => {
         const sequelize = require('../models/connection');
-        require('../models/transaction');
-        require('../models/journal');
-        sequelize.sync().then(() => {
-            Book = require('../').Book;
-            done();
+        Book = require('../models/book');
+        return sequelize.sync();
+    });
+    
+    let entry1 = null;
+    it('Should let you define new books', () => {
+        return Book.getOrCreateBook('TestB', 'USD').then(book => {
+            bookUSD = book;
+            assert.equal(book.name, 'TestB');
+            assert.equal(book.quoteCurrency, 'USD');
+            return Book.getOrCreateBook('TestA', 'ZAR');
+        }).then(book => {
+            bookZAR = book;
+            assert.equal(book.name, 'TestA');
+            assert.equal(book.quoteCurrency, 'ZAR');
+            return Book.listBooks();
+        }).then(books => {
+            assert.equal(books.length, 2);
+            assert.equal(books[0], 'TestA');
+            assert.equal(books[1], 'TestB');
         });
     });
-
-    let entry1 = null;
+    
+    it('Requesting a book that exists returns that book', () => {
+        return Book.getOrCreateBook('TestA', 'ZAR').then(book => {
+            assert.equal(book.name, 'TestA');
+            assert.equal(book.quoteCurrency, 'ZAR');
+            return Book.listBooks();
+        }).then(books => {
+            assert.equal(books.length, 2);
+            assert.equal(books[0], 'TestA');
+            assert.equal(books[1], 'TestB');
+        });
+    });
+    
+    it('Requesting a book with conflicting base currencies throws an error', () => {
+        return Book.getOrCreateBook('TestA', 'THB').then(() => {
+            throw new Error('Request should fail');
+        }, err => {
+            assert(err);
+            assert.equal(err.code, codes.MismatchedCurrency);
+        });
+    });
+    
+    it('should return a list of books', () => {
+        return Book.listBooks().then(books => {
+            assert.equal(books.length, 2);
+            assert.equal(books[0], 'TestA');
+            assert.equal(books[1], 'TestB');
+        });
+    });
+    
     it('Should let you create a basic transaction', () => {
-        const book = new Book('MyBook');
-        return book.entry('Test Entry').then(entry => {
-            return entry.debit('Assets:Receivable', 500)
-            .credit('Income:Rent', 500)
-            .commit();
-        }).then((entry) => {
-            entry1 = entry;
-            assert.equal(entry.memo, 'Test Entry');
-            return entry.getTransactions();
+        const entry = bookZAR.newJournalEntry('Test Entry');
+        entry.debit('Assets:Receivable', 500, 'ZAR')
+            .credit('Income:Rent', 500, 'ZAR');
+        return entry.commit().then((e) => {
+            entry1 = e;
+            assert.equal(e.memo, 'Test Entry');
+            return e.getTransactions();
         }).then((txs) => {
             assert.equal(txs.length, 2);
             const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-            return book.entry('Test Entry 2', threeDaysAgo);
-        }).then(entry2 => {
+            const entry2 = bookZAR.newJournalEntry('Test Entry 2', threeDaysAgo);
             return entry2
-            .debit('Assets:Receivable', 700)
-            .credit('Income:Rent', 700)
-            .commit();
+                .debit('Assets:Receivable', 700)
+                .credit('Income:Rent', 700)
+                .commit();
         }).then(entry2 => {
-            assert.equal(entry2.book, 'MyBook');
             assert.equal(entry2.memo, 'Test Entry 2');
             return entry2.getTransactions();
         }).then(txs => {
-            txs = txs.sort((a, b) => a.accounts > b.accounts ? 1 : -1);
+            txs = txs.sort((a, b) => a.account > b.account ? 1 : -1);
             assert.equal(txs.length, 2);
-            assert.equal(txs[0].exchange_rate, 1.0);
+            assert.equal(txs[0].exchangeRate, 1.0);
             assert.equal(txs[0].debit, 700);
             assert.equal(txs[0].credit, 0);
             assert.equal(txs[1].credit, 700);
             assert.equal(txs[1].debit, 0);
         });
     });
-
+    
     it('Should deal with rounding errors', () => {
-        const book = new Book('MyBook');
-        return book.entry('Rounding Test').then(entry => {
-            return entry.credit('A:B', 1005)
-            .debit('A:B', 994.95)
-            .debit('A:B', 10.05)
-            .commit();
-        }).then(() => {
-            return book.balance({ account: 'A:B' })
+        const entry = bookUSD.newJournalEntry('Rounding Test');
+        entry.credit('A:B', 1005, 'USD')
+            .debit('A:B', 994.95, 'USD')
+            .debit('A:B', 10.05, 'USD');
+        return entry.commit().then(() => {
+            return bookUSD.getBalance({account: 'A:B'});
         }).then((balance) => {
             assert.equal(balance.balance, 0);
             assert.equal(balance.creditTotal, 1005);
             assert.equal(balance.debitTotal, 1005);
             assert.equal(balance.numTransactions, 3);
+            assert.equal(balance.currency, 'USD');
         });
     });
-
+    
     it('Should have updated the balance for assets and income and accurately give balance for sub-accounts', () => {
-        const book = new Book('MyBook');
-        return book.balance({ account: 'Assets' }).then((data) => {
+        return bookZAR.getBalance({account: 'Assets'}).then((data) => {
             assert.equal(data.numTransactions, 2);
             assert.equal(data.balance, -1200);
-            return book.balance({ account: 'Assets:Receivable' });
+            return bookZAR.getBalance({account: 'Assets:Receivable'});
         }).then((data) => {
             assert.equal(data.numTransactions, 2);
             assert.equal(data.balance, -1200);
-            return book.balance({ account: 'Assets:Other' });
+            return bookZAR.getBalance({account: 'Assets:Other'});
         }).then((data) => {
             assert.equal(data.numTransactions, 0);
             assert.equal(data.balance, 0);
         });
     });
-
+    
     it('should return full ledger', () => {
-        const book = new Book('MyBook');
-        return book.ledger({ account: 'Assets' }).then(res => {
+        return bookZAR.getLedger({account: 'Assets'}).then(res => {
             assert.equal(res.count, 2);
         });
     });
-
+    
     it('should allow you to void a journal entry', () => {
-        const book = new Book('MyBook');
-        return book.balance({ account: 'Assets', memo: 'Test Entry' }).then((data) => {
-            assert.equal(data.balance, -500);
-            return book.voidEntry(1, 'Messed up');
+        return bookZAR.getJournalEntries({memo: 'Test Entry'}).then((txs) => {
+            const id = txs[0].id;
+            return bookZAR.voidEntry(id, 'Messed up');
         }).then(() => {
-            return book.balance({ account: 'Assets' });
+            return bookZAR.getBalance({account: 'Assets'});
         }).then((data) => {
             assert.equal(data.balance, -700);
-            return book.balance({ account: 'Assets', memo: 'Test Entry' });
-        }).then((data) => {
-            assert.equal(data.balance, 0);
         });
     });
-
+    
     it('should list all accounts', () => {
-        const book = new Book('MyBook');
-        return book.listAccounts().then((accounts) => {
+        return bookZAR.listAccounts().then((accounts) => {
             assert(accounts.indexOf('Assets') > -1);
             assert(accounts.indexOf('Assets:Receivable') > -1);
             assert(accounts.indexOf('Income') > -1);
             assert(accounts.indexOf('Income:Rent') > -1);
         });
     });
-
+    
     it('should return ledger with array of accounts', () => {
-        const book = new Book('MyBook');
-        return book.ledger({
+        return bookZAR.getLedger({
             account: ['Assets', 'Income']
         }).then((result) => {
             assert.equal(result.count, 6);
         });
     });
-
+    
     it('should give you a paginated ledger when requested', () => {
-        const book = new Book('MyBook');
-        return book.ledger({
+        return bookZAR.getLedger({
             account: ['Assets', 'Income'],
             perPage: 4,
             page: 2
         })
-        .then((result) => {
-            assert.equal(result.count, 6);
-            assert.equal(result.transactions.length, 2);
-        })
-    });
-
-    describe('approved/pending transactions', () => {
-        let pendingJournal;
-
-        it('should not include pending transactions in balance', () => {
-            const book = new Book('MyBook');
-            return book.entry('Test Entry 3').then(entry => {
-                return entry.debit('Foo', 500)
-                .credit('Bar', 500)
-                .setApproved(false)
-                .commit();
-            }).then(entry => {
-                pendingJournal = entry;
-                // Balance should still be 0 since they're not approved
-                return book.balance({ account: 'Foo' });
-            }).then(data => {
-                assert.equal(data.balance, 0);
+            .then((result) => {
+                assert.equal(result.count, 2);
+                assert.equal(result.transactions.length, 2);
+                assert.equal(result.transactions[0].id, 8);
+                assert.equal(result.transactions[1].id, 9);
             });
-        });
-
-        it('should not include pending transactions in ledger', () => {
-            const book = new Book('MyBook');
-            return book.ledger({ account: ['Foo'] }).then((response) => {
-                assert.equal(response.count, 0);
-            });
-        });
-
-        it('should set all transactions to approved when approving the journal', () => {
-            const book = new Book('MyBook');
-            pendingJournal.approved = true;
-            return pendingJournal.save().then(() => {
-                return book.balance({ account: 'Bar' });
-            }).then(data => {
-                assert.equal(data.balance, 500);
-            });
-        });
     });
 });

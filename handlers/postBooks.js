@@ -9,6 +9,6 @@
  *   
  */
 exports.handler = function postBooks(req, res, next) {
-  res.send('postBooks')
+  res.json(req.body);
   next()
-}
+};
