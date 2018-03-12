@@ -16,7 +16,7 @@ info:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
   x-logo:
-    url: /logo.png
+    url: /ale/logo.png
 externalDocs:
   description: A.L.E. Github page
   url: 'https://github.com/CjS77/ale'
@@ -255,6 +255,9 @@ paths:
           in: body
           schema:
             type: object
+            required:
+              - accounts
+              - exchangeRates
             properties:
               accounts:
                 type: array
@@ -263,7 +266,7 @@ paths:
               exchangeRates:
                 type: object
                 additionalProperties:
-                  type: string
+                  type: number
       produces:
         - application/json
       responses:
