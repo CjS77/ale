@@ -1,0 +1,425 @@
+swagger: '2.0'
+schemes:
+  - http
+host: 'localhost:8813'
+basePath: /
+info:
+  description: |
+    # A.L.E Double-Entry Accounting REST API
+
+    ALE divides itself into "books", each of which store *journal entries* and their child *transactions*.
+    The cardinal rule of double-entry accounting is that "everything must balance out to zero", and that rule is applied
+    to every journal entry written to the book.
+  version: 1.0.0
+  title: A.L.E.
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  x-logo:
+    url: /logo.png
+externalDocs:
+  description: A.L.E. Github page
+  url: 'https://github.com/CjS77/ale'
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  /books/:
+    get:
+      summary: List all current books
+      description: |
+        Produces an array of all the books currently registered on the database.
+      operationId: getBooks
+      responses:
+        '200':
+          description: The array of books
+          schema:
+            $ref: '#/definitions/Books'
+          examples:
+            application/json:
+              - id: General Ledger
+                currency: USD
+              - id: London office ledger
+                currency: GBP
+    post:
+      parameters:
+        - in: body
+          name: body
+          description: New Book definition
+          required: true
+          schema:
+            $ref: '#/definitions/Book'
+      operationId: postBooks
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/BookResponse'
+          examples:
+            application/json:
+              success: false
+              message: Book 'General' already exists
+        '400':
+          description: Bad input
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+          examples:
+            application/json:
+              success: false
+              message: Book 'Foobar' does not exist
+  '/books/{bookId}/ledger':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    post:
+      summary: Post a new Journal entry
+      description: Add a new (balanced) Journal entry to the book
+      operationId: postBookEntry
+      parameters:
+        - name: body
+          in: body
+          description: The new Journal Entry definition
+          schema:
+            $ref: '#/definitions/NewJournalEntry'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/PostEntryResponse'
+    get:
+      summary: Fetch the ledger
+      description: |
+        Fetches all transactions for the given book for the dates provided
+      operationId: getBookEntries
+      parameters:
+        - name: bookId
+          description: The book to extract entries from
+          in: path
+          type: integer
+          required: true
+        - name: startDate
+          in: query
+          description: The start date for entries
+          required: false
+          type: string
+        - name: endDate
+          in: query
+          description: The end date for entries
+          required: false
+          type: string
+        - name: perPage
+          in: query
+          description: The number of results per page
+          required: false
+          type: integer
+        - name: page
+          in: query
+          description: The page number
+          required: false
+          type: integer
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/Entries'
+          examples:
+            application/json:
+              book:
+                id: General Ledger
+                currency: USD
+              startDate: 1520228313023
+              endDate: 1520428313023
+              entries:
+                - date: 1520228313023
+                  memo: Payroll
+                  transactions:
+                    - account: 'Bank:Local'
+                      debit: 1000
+                      currency: USD
+                      exchangeRate: 1
+                    - account: 'Employees:Alice'
+                      value: 500
+                      currency: USD
+                      exchangeRate: 1
+                    - account: 'Employees:Bob'
+                      value: 500
+                      currency: USD
+                      exchangeRate: 1
+        '400':
+          description: 'Invalid input, such as unknown book'
+          schema:
+            $ref: '#/definitions/Response'
+  '/books/{bookId}/accounts':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    get:
+      summary: List all accounts
+      operationId: getAccounts
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: array
+            items:
+              type: string
+  '/books/{bookId}/transactions':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    get:
+      summary: List all transactions for given accounts
+      operationId: getTransactions
+      parameters:
+        - name: accounts
+          description: A comma-separated search term for accounts
+          in: query
+          type: string
+          required: true
+        - name: perPage
+          in: query
+          description: The number of results per page
+          required: false
+          type: integer
+        - name: page
+          in: query
+          description: The page number
+          required: false
+          type: integer
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+  '/books/{bookId}/balance':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    get:
+      summary: Return an account balance
+      operationId: getBalance
+      parameters:
+        - name: account
+          description: The account to get the balance for
+          in: query
+          type: string
+          required: true
+        - name: inQuoteCurrency
+          description: 'If true (default), converts all values to the quote currency first'
+          in: query
+          type: boolean
+          required: false
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/Balance'
+  '/books/{bookId}/marktomarket':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    post:
+      summary: Mark the account(s) to market
+      description: Calculates the unlrealised profit of the given accounts at the exchange rate vector provided
+      operationId: postMarkToMarket
+      parameters:
+        - name: body
+          in: body
+          schema:
+            type: object
+            properties:
+              accounts:
+                type: array
+                items:
+                  type: string
+              exchangeRates:
+                type: object
+                additionalProperties:
+                  type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/UnrealisedProfit'
+definitions:
+  Books:
+    type: array
+    items:
+      $ref: '#/definitions/Book'
+  Book:
+    type: object
+    required:
+      - name
+      - currency
+    properties:
+      id:
+        description: The id for the book the book
+        type: integer
+      name:
+        description: The name of the book
+        type: string
+        example: General Ledger
+      currency:
+        description: |
+          The currency the book is referenced in.
+          All other currencies and calculations are quoted in terms of this currency
+        type: string
+        example: USD
+      createdAt:
+        description: The timestamp of when the book was created
+        type: number
+      updatedAt:
+        description: The timestamp of the last time this entry was modified
+        type: number
+  Entries:
+    type: object
+    properties:
+      book:
+        $ref: '#/definitions/Book'
+      startDate:
+        type: number
+      endDate:
+        type: number
+      entries:
+        type: array
+        items:
+          $ref: '#/definitions/Entry'
+  Entry:
+    type: object
+    properties:
+      date:
+        description: The timestamp for the entry
+        type: number
+      memo:
+        description: The description for the entry
+        type: string
+      voided:
+        description: Indicates whether the entry is still valid
+        type: boolean
+      voidReason:
+        description: The reason for the entry reversal
+        type: string
+      transactions:
+        description: An array of transactions for the entry
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+  Transaction:
+    type: object
+    required:
+      - account
+    properties:
+      account:
+        description: The account this transaction is reflected on
+        type: string
+      credit:
+        description: The credit value of the transaction
+        type: number
+      debit:
+        description: The debit value of the transaction
+        type: number
+      currency:
+        description: The currency for this transaction
+        type: string
+      exchangeRate:
+        description: The exchange rate to convert to the basis currency
+        type: number
+  Response:
+    type: object
+    properties:
+      success:
+        description: Indicates whether request was succesful
+        type: boolean
+      message:
+        type: string
+  ErrorResponse:
+    allOf:
+      - $ref: '#/definitions/Response'
+      - properties:
+          errorCode:
+            type: integer
+  BookResponse:
+    allOf:
+      - $ref: '#/definitions/Response'
+      - $ref: '#/definitions/Book'
+  PostEntryResponse:
+    allOf:
+      - $ref: '#/definitions/Response'
+      - properties:
+          id:
+            description: The id of the new Journal Entry
+            type: integer
+  NewJournalEntry:
+    type: object
+    required:
+      - memo
+      - transactions
+    properties:
+      memo:
+        description: The Journal Entry description
+        type: string
+      timestamp:
+        description: The time stamp for the journal entry
+        type: string
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+  Balance:
+    type: object
+    properties:
+      creditTotal:
+        description: The total value of credits into the account
+        type: number
+      debitTotal:
+        description: The total value of debits into the account
+        type: number
+      balance:
+        description: The current account balabce (credits - debits)
+        type: number
+      currency:
+        description: The nominal currency of the account
+        type: number
+      numTransactions:
+        description: The number of transactions into the account
+        type: number
+  UnrealisedProfit:
+    type: object
+    properties:
+      unrealizedProfit:
+        description: The total current unrealised profit for the given accounts
+        type: number
+      additionalProperties:
+        type: number
