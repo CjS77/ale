@@ -190,6 +190,73 @@ paths:
             items:
               type: string
 
+  '/books/{bookId}/transactions':
+    parameters:
+    - name: bookId
+      description: The book to extract entries from
+      in: path
+      type: integer
+      required: true
+    get:
+      summary: List all transactions for given accounts
+      operationId: getTransactions
+      parameters:
+      - name: accounts
+        description: A comma-separated search term for accounts
+        in: query
+        type: string
+        required: true
+
+      - name: perPage
+        in: query
+        description: 'The number of results per page'
+        required: false
+        type: integer
+
+      - name: page
+        in: query
+        description: 'The page number'
+        required: false
+        type: integer
+
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+
+  '/books/{bookId}/balance':
+    parameters:
+    - name: bookId
+      description: The book to extract entries from
+      in: path
+      type: integer
+      required: true
+    get:
+      summary: Return an account balance
+      operationId: getBalance
+      parameters:
+      - name: account
+        description: The account to get the balance for
+        in: query
+        type: string
+        required: true
+      - name: inQuoteCurrency
+        description: If true (default), converts all values to the quote currency first
+        in: query
+        type: boolean
+        required: false
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/Balance'
 
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.
@@ -327,3 +394,29 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Transaction'
+
+  Balance:
+    type: object
+    required:
+      - creditTotal
+      - debitTotal
+      - balance
+      - currency
+      - numTransactions
+    properties:
+      creditTotal:
+        description: The total value of credits into the account
+        type: number
+      debitTotal:
+        description: The total value of debits into the account
+        type: number
+      balance:
+        description: The current account balabce (credits - debits)
+        type: number
+      currency:
+        description: The nominal currency of the account
+        type: number
+      numTransactions:
+        description: The number of transactions into the account
+        type: number
+

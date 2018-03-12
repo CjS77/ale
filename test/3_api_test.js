@@ -323,4 +323,53 @@ describe('ALE API', () => {
                 });
         });
     });
+    
+    describe('GET /books/{id}/transactions', () => {
+        it('returns transactions for given account', () => {
+            return request(app)
+                .get(`/books/${testUSD}/transactions`)
+                .query({ accounts: 'Payroll'})
+                .expect(200)
+                .then(res => {
+                    const txs = res.body;
+                    assert.equal(txs.length, 2);
+                    assert.equal(txs[0].account, 'Payroll:Alice');
+                    assert.equal(txs[0].credit, '5000');
+                    assert.equal(txs[1].account, 'Payroll:Bob');
+                    assert.equal(txs[1].credit, '5000');
+                });
+        });
+    });
+    
+    describe('GET /books/{id}/balance', () => {
+        it('returns the balance for an account', () => {
+            return request(app)
+                .get(`/books/${testUSD}/balance`)
+                .query({ account: 'Expenses'})
+                .expect(200)
+                .then(res => {
+                    const bal = res.body;
+                    assert.equal(bal.creditTotal, 120000);
+                    assert.equal(bal.debitTotal, 10000);
+                    assert.equal(bal.balance, 110000);
+                    assert.equal(bal.currency, 'USD');
+                    assert.equal(bal.numTransactions, 2);
+                });
+        });
+    
+        it('returns the balance in base currency', () => {
+            return request(app)
+                .get(`/books/${testUSD}/balance`)
+                .query({ account: 'GoldEFT:Foreign', inQuoteCurrency: false})
+                .expect(200)
+                .then(res => {
+                    const bal = res.body;
+                    assert.equal(bal.creditTotal, 26000);
+                    assert.equal(bal.debitTotal, 0);
+                    assert.equal(bal.balance, 26000);
+                    assert.equal(bal.currency, 'ZAR');
+                    assert.equal(bal.numTransactions, 1);
+                });
+        });
+    });
 });

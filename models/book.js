@@ -93,15 +93,15 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
                 notes: 0
             };
         }
-        const creditTotal = +result.getDataValue('creditTotal');
-        const debitTotal = +result.getDataValue('debitTotal');
+        const creditTotal = +result.get('creditTotal');
+        const debitTotal = +result.get('debitTotal');
         const total = creditTotal - debitTotal;
         return {
             creditTotal: creditTotal,
             debitTotal: debitTotal,
             balance: total,
-            currency: inQuoteCurrency ? this.quoteCurrency : result.getDataValue('currency'),
-            numTransactions: +result.getDataValue('numTransactions')
+            currency: inQuoteCurrency ? this.quoteCurrency : result.get('currency'),
+            numTransactions: +result.get('numTransactions')
         };
     });
 };
