@@ -138,4 +138,4 @@ book.markToMarket({ account: ['Trading', 'Assets:Bank'] }, { ZAR: 20, USD: 1 }).
 ## Changelog
 
 * **v0.1.0** First release
-
+* **v1.0.0** REST API release
