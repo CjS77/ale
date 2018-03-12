@@ -14,19 +14,32 @@
 
 const { Client } = require('pg');
 const async = require('async');
+const Transaction = require('../models/transaction');
+const Book = require('../models/book');
+const JournalEntry = require('../models/journal');
 
 process.env.ALE_CONNECTION = process.env.ALE_CONNECTION || 'postgres://postgres@localhost/ale-test';
 const masterUri = process.env.MASTER_ALE_CONNECTION || 'postgres://postgres@localhost/postgres';
 
-let sequelize;
-before((done) => {
-    create(masterUri, 'ale-test', done);
-});
+let sequelize = require('../models/connection');
 
-after(() => {
-    sequelize = require('../models/connection');
-    return sequelize.drop();
-});
+module.exports.create = (done) => {
+    create(masterUri, 'ale-test', done);
+};
+
+module.exports.destroy =  () => {
+    return sequelize.drop().then(() => {
+        return sequelize.close();
+    });
+};
+
+module.exports.clear = () => {
+    return Transaction.truncate().then(() => {
+        return JournalEntry.truncate({ cascade: true });
+    }).then(() => {
+        return Book.truncate({ cascade: true });
+    })
+};
 
 function create(master_uri, db_name, cb) {
     const queries = [

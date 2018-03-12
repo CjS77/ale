@@ -14,22 +14,25 @@
 
 const assert = require('assert');
 const {codes} = require('../lib/errors');
+const testDB = require('./testDB');
 
 let Book;
 describe('ALE forex journals', () => {
-    before((done) => {
-        const sequelize = require('../models/connection');
-        require('../models/transaction');
-        require('../models/journal');
-        sequelize.sync().then(() => {
-            Book = require('../').Book;
-            done();
-        });
+    
+    before(() => {
+        return testDB.clear();
     });
+    
+    before(() => {
+        const sequelize = require('../models/connection');
+        Book = require('../models/book');
+        return sequelize.sync();
+    });
+    
     it('specify currencies in journal entries', () => {
         let book;
         return Book.getOrCreateBook('Forex test', 'USD').then(b => {
-            book = b;
+            book = b.book;
             const entry = book.newJournalEntry('Base investment');
             return entry
                 .credit('Trading:USD', 1650, 'USD', 1)
@@ -46,7 +49,7 @@ describe('ALE forex journals', () => {
     it('handles multi-currency entries', () => {
         let book;
         return Book.getOrCreateBook('Forex test', 'USD').then(b => {
-            book = b;
+            book = b.book;
             const entry = book.newJournalEntry('Buy 10000 ZAR for $1000');
             return entry
                 .credit('Trading:ZAR', 10000, 'ZAR', 0.1)
@@ -68,8 +71,8 @@ describe('ALE forex journals', () => {
     });
     
     it('Calculates mark-to-market at a given set of rates', () => {
-        return Book.getOrCreateBook('Forex test').then(book => {
-            return book.markToMarket({account: ['Trading', 'Assets:Bank']}, {ZAR: 20, USD: 1});
+        return Book.getOrCreateBook('Forex test').then(res => {
+            return res.book.markToMarket({account: ['Trading', 'Assets:Bank']}, {ZAR: 20, USD: 1});
         }).then(result => {
             assert.equal(result['Trading:ZAR'], 500);
             assert.equal(result['Trading:USD'], 600);
@@ -78,8 +81,8 @@ describe('ALE forex journals', () => {
     });
     
     it('Reject mark-to-market if rates are missing', () => {
-        return Book.getOrCreateBook('Forex test').then(book => {
-            return book.markToMarket({account: ['Trading', 'Assets:Bank']}, {USD: 1});
+        return Book.getOrCreateBook('Forex test').then(res => {
+            return res.book.markToMarket({account: ['Trading', 'Assets:Bank']}, {USD: 1});
         }).then(() => {
             throw new Error('Should throw');
         }, err => {

@@ -14,45 +14,53 @@
 
 const assert = require('assert');
 const {codes} = require('../lib/errors');
+const testDB = require('./testDB');
 
 let Book;
 describe('ALE', () => {
-    let bookZAR, bookUSD;
+    let bookZAR, bookUSD, sequelize;
+    
+    before(done => {
+        testDB.clear().then(() => {
+            done();
+        });
+    });
     
     before(() => {
-        const sequelize = require('../models/connection');
+        sequelize = require('../models/connection');
         Book = require('../models/book');
         return sequelize.sync();
     });
     
     let entry1 = null;
     it('Should let you define new books', () => {
-        return Book.getOrCreateBook('TestB', 'USD').then(book => {
-            bookUSD = book;
-            assert.equal(book.name, 'TestB');
-            assert.equal(book.quoteCurrency, 'USD');
+        return Book.getOrCreateBook('TestB', 'USD').then(res => {
+            bookUSD = res.book;
+            assert.equal(bookUSD.name, 'TestB');
+            assert.equal(bookUSD.quoteCurrency, 'USD');
             return Book.getOrCreateBook('TestA', 'ZAR');
-        }).then(book => {
-            bookZAR = book;
-            assert.equal(book.name, 'TestA');
-            assert.equal(book.quoteCurrency, 'ZAR');
+        }).then(res => {
+            bookZAR = res.book;
+            assert.equal(bookZAR.name, 'TestA');
+            assert.equal(bookZAR.quoteCurrency, 'ZAR');
             return Book.listBooks();
         }).then(books => {
             assert.equal(books.length, 2);
-            assert.equal(books[0], 'TestA');
-            assert.equal(books[1], 'TestB');
+            assert.equal(books[0].name, 'TestA');
+            assert.equal(books[1].name, 'TestB');
         });
     });
     
     it('Requesting a book that exists returns that book', () => {
-        return Book.getOrCreateBook('TestA', 'ZAR').then(book => {
-            assert.equal(book.name, 'TestA');
-            assert.equal(book.quoteCurrency, 'ZAR');
+        return Book.getOrCreateBook('TestA', 'ZAR').then(res => {
+            assert.equal(res.isNew, false);
+            assert.equal(res.book.name, 'TestA');
+            assert.equal(res.book.quoteCurrency, 'ZAR');
             return Book.listBooks();
         }).then(books => {
             assert.equal(books.length, 2);
-            assert.equal(books[0], 'TestA');
-            assert.equal(books[1], 'TestB');
+            assert.equal(books[0].name, 'TestA');
+            assert.equal(books[1].name, 'TestB');
         });
     });
     
@@ -68,8 +76,10 @@ describe('ALE', () => {
     it('should return a list of books', () => {
         return Book.listBooks().then(books => {
             assert.equal(books.length, 2);
-            assert.equal(books[0], 'TestA');
-            assert.equal(books[1], 'TestB');
+            assert.equal(books[0].name, 'TestA');
+            assert.equal(books[0].quoteCurrency, 'ZAR');
+            assert.equal(books[1].name, 'TestB');
+            assert.equal(books[1].quoteCurrency, 'USD');
         });
     });
     
@@ -177,8 +187,8 @@ describe('ALE', () => {
             .then((result) => {
                 assert.equal(result.count, 2);
                 assert.equal(result.transactions.length, 2);
-                assert.equal(result.transactions[0].id, 8);
-                assert.equal(result.transactions[1].id, 9);
+                assert.equal(result.transactions[0].credit, 500);
+                assert.equal(result.transactions[1].debit, 500);
             });
     });
 });

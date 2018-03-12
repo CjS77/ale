@@ -13,27 +13,10 @@
  *
  */
 
-const Book = require('../models/book');
-const connection = require('../models/connection');
+const testDB = require('./testDB');
 
-class AleWrapper {
-    constructor() {
-        this.books = {}
-    }
-    
-    buildBooklist() {
-        return Book.listBooks().then(books => {
-            books.forEach(book => {
-            
-            })
-        })
-    }
-    
-    getBook(name) {
-        return this.books[name];
-    }
-    
-    newBook(name, quoteCurrency) {
-        const newBook = new Book(name, quoteCurrency)
-    }
-}
+describe('Create the database.', () => {
+    before(done => {
+        testDB.create(done);
+    });
+});

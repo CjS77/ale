@@ -30,9 +30,9 @@ const Book = sequelize.define('book', {
     quoteCurrency: {type: Sequelize.STRING, defaultValue: 'USD'}
 });
 
-JournalEntry.belongsTo(Book, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
-Transaction.belongsTo(Book, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' }); // Redundant, but saves double JOINS in a few queries
-Book.JournalEntries = Book.hasMany(JournalEntry,  { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
+JournalEntry.belongsTo(Book, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'});
+Transaction.belongsTo(Book, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'}); // Redundant, but saves double JOINS in a few queries
+Book.JournalEntries = Book.hasMany(JournalEntry, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'});
 
 /**
  * Creates a new journal entry, but doesn't persist it to the DB until entry.commit() is called
@@ -62,7 +62,7 @@ Book.prototype.getJournalEntries = function(query) {
     }).catch(e => {
         const err = new AleError(`JournalEntry query failed. ${e.message}`, codes.DatabaseQueryError);
         return sequelize.Promise.reject(err);
-    })
+    });
 };
 /**
  * Returns a promise fo the balance of the given account.
@@ -205,11 +205,11 @@ Book.normalizeRates = function(currency, rates) {
 /**
  * Convert object into Sequelise 'where' clause
  * @param query {{account: {acct, subacct, subsubacct}, startDate, endDate, perPage, page, memo}}
- * @returns {Object}
+ * @returns {Array} of Book models
  */
 function parseQuery(id, query) {
     let account;
-    const parsed = { where: { bookId: id }};
+    const parsed = {where: {bookId: id}};
     
     if (query.perPage) {
         const perPage = query.perPage || 25;
@@ -254,16 +254,16 @@ function parseQuery(id, query) {
 }
 
 Book.listBooks = function() {
-    return Book.findAll({attributes: ['name'], order: ['name']}).then(results => {
+    return Book.findAll({order: ['name']}).then(results => {
         if (!results) {
             return [];
         }
-        return results.map(o => o.name);
+        return results;
     });
 };
 
 /**
- * Gets an existing book, or creates a new on
+ * Gets an existing book, or creates a new one
  * @param name The name of the new book
  * @param quoteCurrency The Base currency for the book. If the book already exists, this parameter must match the existing base currency or be undefined.
  */
@@ -282,8 +282,30 @@ Book.getOrCreateBook = function(name, quoteCurrency) {
                 const err = new AleError(`Request Base currency does not match existing base currency. Requested: ${quoteCurrency}. Current: ${cur}`, codes.MismatchedCurrency);
                 return sequelize.Promise.reject(err);
             }
-            return book;
+            return {isNew: isNewBook, book: book};
         });
+};
+
+/**
+ * Gets an existing, or returns an error
+ * @param name The name of the new book
+ */
+Book.getBook = function(name) {
+    return Book.findOne({where: {name: name}}).then(book => {
+        return book;
+    }).catch(err => {
+        return sequelize.Promise.reject(new AleError(`Book ${name} does not exist. ${err.message}`, codes.BookDoesNotExist));
+    });
+};
+
+Book.prototype.values = function() {
+    return {
+        id: this.get('id'),
+        name: this.get('name'),
+        currency: this.get('quoteCurrency'),
+        createdAt: this.get('createdAt').valueOf(),
+        updatedAt: this.get('updatedAt').valueOf()
+    };
 };
 
 module.exports = Book;
