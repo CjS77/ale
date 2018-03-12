@@ -14,7 +14,7 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
     "x-logo": {
-      "url": "/logo.png"
+      "url": "/ale/logo.png"
     }
   },
   "externalDocs": {
@@ -370,6 +370,10 @@
             "in": "body",
             "schema": {
               "type": "object",
+              "required": [
+                "accounts",
+                "exchangeRates"
+              ],
               "properties": {
                 "accounts": {
                   "type": "array",
@@ -380,7 +384,7 @@
                 "exchangeRates": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "string"
+                    "type": "number"
                   }
                 }
               }
