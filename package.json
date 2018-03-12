@@ -1,6 +1,6 @@
 {
   "name": "a.l.e",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "Double accounting package based on node.js + sequelize",
   "main": "index.js",
   "repository": "git@github.com:CjS77/ale.git",
