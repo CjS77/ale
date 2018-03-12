@@ -386,5 +386,16 @@ describe('ALE API', () => {
                     });
                 });
         });
+    
+        it('returns an error if exchange rates are missing', () => {
+            return request(app)
+                .post(`/books/${testUSD}/marktomarket`)
+                .send({ accounts: ['GoldEFT:Foreign', 'Purchases:Local'], exchangeRates: { ZAR: 20 }})
+                .expect(400)
+                .then(res => {
+                    assert.equal(res.body.success, false);
+                    assert.equal(res.body.errorCode, codes.MissingInput);
+                });
+        });
     });
 });
