@@ -3,8 +3,20 @@ Multi-currency double-entry accounting system based on node.js + Sequelize
 
 Ale is based on the basic formula `Assets = Liabilities + Equity` and is insipred by [Medici](https://github.com/koresar/medici)
 
+## Standalone Server
+A.L.E. operates as a standalone microservice.
 
-## Basics
+Configure your database and after setting the `ALE_CONNECTION` envar, simply run 
+
+`$ node server.js`
+
+to launch a REST server to handle all your double-entry accounting needs. 
+You can peruse the [API documentation](https://cjs77.github.io/ale/) for more details on how to use the service.
+
+
+
+## Programmatic API
+A.L.E. can also be used as a node module. This section describes how to manage multi-currency accounting programmatically.
 
 ALE divides itself into "books", each of which store *journal entries* and their child *transactions*. The cardinal rule of double-entry accounting is that "everything must balance out to zero", and that rule is applied to every journal entry written to the book. If the transactions for a journal entry do not balance out to zero, the system will return a rejected promise.
 
