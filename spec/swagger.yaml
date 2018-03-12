@@ -170,6 +170,26 @@ paths:
           schema:
             $ref: '#/definitions/Response'
 
+  '/books/{bookId}/accounts':
+    parameters:
+    - name: bookId
+      description: The book to extract entries from
+      in: path
+      type: integer
+      required: true
+    get:
+      summary: List all accounts
+      operationId: getAccounts
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              type: string
+
 
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.

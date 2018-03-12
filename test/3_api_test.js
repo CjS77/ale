@@ -311,4 +311,16 @@ describe('ALE API', () => {
                 });
         });
     });
+    
+    describe('GET /books/{id}/accounts', () => {
+        it('returns an array of strings', () => {
+            return request(app)
+                .get(`/books/${testUSD}/accounts`)
+                .expect(200)
+                .then(res => {
+                    const accounts = res.body;
+                    assert.equal(accounts.length, 12);
+                });
+        });
+    });
 });

@@ -285,9 +285,7 @@ Book.getOrCreateBook = function(name, quoteCurrency) {
             const book = result[0];
             const cur = book.quoteCurrency;
             const isNewBook = result[1];
-            if (isNewBook) {
-                console.log(`New book created: ${name} (${cur})`);
-            } else if (quoteCurrency && (quoteCurrency != cur)) {
+            if (quoteCurrency && (quoteCurrency != cur)) {
                 const err = new AleError(`Request Base currency does not match existing base currency. Requested: ${quoteCurrency}. Current: ${cur}`, codes.MismatchedCurrency);
                 return sequelize.Promise.reject(err);
             }
