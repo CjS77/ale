@@ -187,9 +187,9 @@ Book.prototype.markToMarket = function(query, exchangeRates) {
             if (!rates[tx.currency]) {
                 throw new AleError(`A ${tx.currency} transaction exists, but its current exchange rate was not provided`, codes.ExchangeRateNotFound);
             }
-            let currentBal = (new BigNumber(tx.getDataValue('balance'))).div(rates[tx.currency]);
+            let currentBal = (new BigNumber(tx.get('balance'))).div(rates[tx.currency]);
             profit = profit.plus(currentBal);
-            result[tx.getDataValue('account')] = +currentBal;
+            result[tx.get('account')] = +currentBal;
         });
         result.unrealizedProfit = +profit;
         return result;

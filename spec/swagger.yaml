@@ -258,6 +258,44 @@ paths:
           schema:
             $ref: '#/definitions/Balance'
 
+  '/books/{bookId}/marktomarket':
+    parameters:
+    - name: bookId
+      description: The book to extract entries from
+      in: path
+      type: integer
+      required: true
+    post:
+      summary: Mark the account(s) to market
+      description: Calculates the unlrealised profit of the given accounts at the exchange rate vector provided
+      operationId: postMarkToMarket
+      parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          required:
+            - accounts
+            - exchangeRates
+          properties:
+            accounts:
+              type: array
+              items:
+                type: string
+            exchangeRates:
+              type: object
+              additionalProperties:
+                type: number
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/UnrealisedProfit'
+
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.
 definitions:
@@ -397,12 +435,6 @@ definitions:
 
   Balance:
     type: object
-    required:
-      - creditTotal
-      - debitTotal
-      - balance
-      - currency
-      - numTransactions
     properties:
       creditTotal:
         description: The total value of credits into the account
@@ -420,3 +452,11 @@ definitions:
         description: The number of transactions into the account
         type: number
 
+  UnrealisedProfit:
+    type: object
+    properties:
+      unrealizedProfit:
+        description: The total current unrealised profit for the given accounts
+        type: number
+      additionalProperties:
+        type: number

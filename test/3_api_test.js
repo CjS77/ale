@@ -371,5 +371,20 @@ describe('ALE API', () => {
                     assert.equal(bal.numTransactions, 1);
                 });
         });
+    
+        it('returns the unrealised profit', () => {
+            return request(app)
+                .post(`/books/${testUSD}/marktomarket`)
+                .send({ accounts: ['GoldEFT:Foreign', 'Purchases:Local'], exchangeRates: { USD: 1, ZAR: 20 }})
+                .expect(200)
+                .then(res => {
+                    const bal = res.body;
+                    assert.deepEqual(bal, {
+                        'GoldEFT:Foreign': 1300,
+                        'Purchases:Local': -2600,
+                        unrealizedProfit: -1300
+                    });
+                });
+        });
     });
 });

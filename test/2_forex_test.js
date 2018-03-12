@@ -80,7 +80,7 @@ describe('ALE forex journals', () => {
         });
     });
     
-    it('Reject mark-to-market if rates are missing', () => {
+    it('Rejects mark-to-market if rates are missing', () => {
         return Book.getOrCreateBook('Forex test').then(res => {
             return res.book.markToMarket({account: ['Trading', 'Assets:Bank']}, {USD: 1});
         }).then(() => {
