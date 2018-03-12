@@ -40,23 +40,24 @@ ALE is written in JavaScript. All database queries return promise objects instea
 Writing a journal entry is very simple. First you need a `book` object:
 
 ```js
-const {book} = require('a.l.e');
+const { Book } = require('a.l.e');
 
 // The first argument is the book name, which is used to determine which book the transactions and journals are queried from.
 // The second argument is the currency to report all queries in.
-const myBook = new book('MyBook', 'USD');
+return Book.getOrCreateBook('ACME inc', 'USD').then(book => {
+    ...
+});
 ```
 
 Now write an entry:
 
 ```js
 // You can specify a Date object as the second argument in the book.entry() method if you want the transaction to be for a different date than right now
-myBook.entry('Received payment').then(entry => {
-    return entry.debit('Assets:Cash', 1000, 'USD', 1.0) // The currency and exchange rate default to 'USD' and 1.0 if omitted
-         .credit('Income', 1000)                        // debit and credit return the entry to allow chained transactions
-         .commit());                                    // Validate and commit the entry to the DB, returning a promise
-}).then(() => {
-  // Entry is saved
+const newEntry= book.newJournalEntry('Received payment');
+newEntry.debit('Assets:Receivable', 500)     // The currency and exchange rate default to 'USD' and 1.0 if omitted
+        .credit('Income:Rent', 500, 'USD');  // debit and credit return the entry to allow chained transactions
+entry.commit().then((e) => {                 // Validate and commit the entry to the DB, returning a promise
+   assert.equal(e.memo, 'Received payment');
 });
 ```
 

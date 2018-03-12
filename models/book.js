@@ -109,22 +109,31 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
 /**
  * Return all transactions ordered by time for a given book (subject to the constraints passed in the query)
  * @param query
- * @param query.account {string|Array} A single, or array of accounts to match. Assets will match Assets and Assets:*
  * @param query.startDate {string|number} Anything parseable by new Date()
  * @param query.endDate {string|number} Anything parseable by new Date()
  * @param query.perPage {number} Limit results to perPage
  * @param query.page {number} Return page number
- * @return {count, transactions}
+ * @return {Array} of JournalEntry
  */
 Book.prototype.getLedger = function(query) {
-    query = parseQuery(this.getDataValue('id'), query);
+    query = parseQuery(this.get('id'), query);
     query.order = [['timestamp', 'ASC']];
-    return Transaction.findAll(query).then(results => {
-        return {
-            count: results.length,
-            transactions: results.map(row => row.values())
-        };
-    });
+    query.include = [ Transaction ];
+    return JournalEntry.findAll(query);
+};
+
+/**
+ * Return all transactions ordered by time for a given book (subject to the constraints passed in the query)
+ * @param query
+ * @param query.account {string|Array} A single, or array of accounts to match. Assets will match Assets and Assets:*
+ * @param query.perPage {number} Limit results to perPage
+ * @param query.page {number} Return page number
+ * @return {Array} of JournalEntry
+ */
+Book.prototype.getTransactions = function(query) {
+    query = parseQuery(this.get('id'), query);
+    query.order = [['timestamp', 'ASC']];
+    return Transaction.findAll(query);
 };
 
 Book.prototype.voidEntry = function(journalId, reason) {
@@ -210,10 +219,10 @@ Book.normalizeRates = function(currency, rates) {
 function parseQuery(id, query) {
     let account;
     const parsed = {where: {bookId: id}};
-    
+    query = query || {};
     if (query.perPage) {
         const perPage = query.perPage || 25;
-        parsed.offset = (query.page - 1) * perPage;
+        parsed.offset = ((query.page || 1) - 1) * perPage;
         parsed.limit = query.perPage;
         delete query.perPage;
         delete query.page;
@@ -292,9 +301,12 @@ Book.getOrCreateBook = function(name, quoteCurrency) {
  */
 Book.getBook = function(name) {
     return Book.findOne({where: {name: name}}).then(book => {
+        if (!book) {
+            return sequelize.Promise.reject(new AleError(`Book ${name} does not exist.`, codes.BookDoesNotExist));
+        }
         return book;
-    }).catch(err => {
-        return sequelize.Promise.reject(new AleError(`Book ${name} does not exist. ${err.message}`, codes.BookDoesNotExist));
+    }, err => {
+        return sequelize.Promise.reject(new AleError(`Error getting book info. ${err.message}`, codes.DatabaseQueryError));
     });
 };
 

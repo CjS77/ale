@@ -77,6 +77,32 @@ paths:
               message: Book 'Foobar' does not exist
 
   '/books/{bookId}/ledger':
+    parameters:
+      - name: bookId
+        description: The book to extract entries from
+        in: path
+        type: integer
+        required: true
+    post:
+      summary: Post a new Journal entry
+      description: Add a new (balanced) Journal entry to the book
+      operationId: postBookEntry
+
+      parameters:
+        - name: body
+          in: body
+          description: The new Journal Entry definition
+          schema:
+            $ref: '#/definitions/NewJournalEntry'
+
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/PostEntryResponse'
+
     get:
       summary: Fetch the ledger
       description: |
@@ -87,7 +113,7 @@ paths:
       - name: bookId
         description: The book to extract entries from
         in: path
-        type: string
+        type: integer
         required: true
 
       - name: startDate
@@ -130,12 +156,11 @@ paths:
                 entries: [
                   {
                     date: 1520228313023,
-                    debits: [
-                      { account: "Bank:Local", description: "Payroll", value: 1000.0, currency: "USD", exchangeRate: 1.0 }
-                    ],
-                    credits: [
-                      { account: "Employees:Alice", description: "Jan 2018", value: 500.0, currency: "USD", exchangeRate: 1.0 },
-                      { account: "Employees:Bob", description: "Jan 2018", value: 500.0, currency: "USD", exchangeRate: 1.0 }
+                    memo: 'Payroll',
+                    transactions: [
+                      { account: "Bank:Local", debit: 1000.0, currency: "USD", exchangeRate: 1.0 },
+                      { account: "Employees:Alice", value: 500.0, currency: "USD", exchangeRate: 1.0 },
+                      { account: "Employees:Bob", value: 500.0, currency: "USD", exchangeRate: 1.0 }
                     ]
                   }
                 ]
@@ -201,32 +226,34 @@ definitions:
       date:
         description: The timestamp for the entry
         type: number
-      debits:
-        description: An array of debits for the entry
+      memo:
+        description: The description for the entry
+        type: string
+      voided:
+        description: Indicates whether the entry is still valid
+        type: boolean
+      voidReason:
+        description: The reason for the entry reversal
+        type: string
+      transactions:
+        description: An array of transactions for the entry
         type: array
         items:
           $ref: '#/definitions/Transaction'
-      credits:
-          description: An array of credit for the entry
-          type: array
-          items:
-            $ref: '#/definitions/Transaction'
 
   Transaction:
     type: object
     required:
       - account
-      - description
-      - value
     properties:
       account:
         description: The account this transaction is reflected on
         type: string
-      description:
-        description: A description for the transaction
-        type: string
-      value:
-        description: The value of the transaction
+      credit:
+        description: The credit value of the transaction
+        type: number
+      debit:
+        description: The debit value of the transaction
         type: number
       currency:
         description: The currency for this transaction
@@ -255,3 +282,28 @@ definitions:
     allOf:
       - $ref: '#/definitions/Response'
       - $ref: '#/definitions/Book'
+
+  PostEntryResponse:
+    allOf:
+      - $ref: '#/definitions/Response'
+      - properties:
+          id:
+            description: The id of the new Journal Entry
+            type: integer
+
+  NewJournalEntry:
+    type: object
+    required:
+      - memo
+      - transactions
+    properties:
+      memo:
+        description: The Journal Entry description
+        type: string
+      timestamp:
+        description: The time stamp for the journal entry
+        type: string
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'

@@ -13,7 +13,6 @@
  */
 
 module.exports = {
-    AleWrapper: require('./lib/wrapper'),
     Book: require('./models/book'),
     Transaction: require('./models/transaction'),
     JournalEntry: require('./models/journal'),

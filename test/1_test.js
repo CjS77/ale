@@ -145,8 +145,8 @@ describe('ALE', () => {
     });
     
     it('should return full ledger', () => {
-        return bookZAR.getLedger({account: 'Assets'}).then(res => {
-            assert.equal(res.count, 2);
+        return bookZAR.getLedger().then(res => {
+            assert.equal(res.length, 2);
         });
     });
     
@@ -171,24 +171,23 @@ describe('ALE', () => {
     });
     
     it('should return ledger with array of accounts', () => {
-        return bookZAR.getLedger({
+        return bookZAR.getTransactions({
             account: ['Assets', 'Income']
         }).then((result) => {
-            assert.equal(result.count, 6);
+            assert.equal(result.length, 6);
         });
     });
     
     it('should give you a paginated ledger when requested', () => {
-        return bookZAR.getLedger({
+        return bookZAR.getTransactions({
             account: ['Assets', 'Income'],
             perPage: 4,
             page: 2
         })
             .then((result) => {
-                assert.equal(result.count, 2);
-                assert.equal(result.transactions.length, 2);
-                assert.equal(result.transactions[0].credit, 500);
-                assert.equal(result.transactions[1].debit, 500);
+                assert.equal(result.length, 2);
+                assert.equal(result[0].credit, 500);
+                assert.equal(result[1].debit, 500);
             });
     });
 });
