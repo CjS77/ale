@@ -16,7 +16,7 @@ info:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
   x-logo:
-    url: /ale/logo.png
+    url: logo.png
 externalDocs:
   description: A.L.E. Github page
   url: 'https://github.com/CjS77/ale'
