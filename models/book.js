@@ -113,6 +113,7 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
  * @param query.endDate {string|number} Anything parseable by new Date()
  * @param query.perPage {number} Limit results to perPage
  * @param query.page {number} Return page number
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return {Array} of JournalEntry
  */
 Book.prototype.getLedger = function(query) {
@@ -128,7 +129,8 @@ Book.prototype.getLedger = function(query) {
  * @param query.account {string|Array} A single, or array of accounts to match. Assets will match Assets and Assets:*
  * @param query.perPage {number} Limit results to perPage
  * @param query.page {number} Return page number
- * @return {Array} of JournalEntry
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
+ * @return {Array} of Transaction
  */
 Book.prototype.getTransactions = function(query) {
     query = parseQuery(this.get('id'), query);
@@ -259,8 +261,8 @@ function parseQuery(id, query) {
         parsed.where.memo = {[Op.or]: [query.memo, `${query.memo} [REVERSED]`]};
         delete query.memo;
     }
-    if (query.order) {
-        parsed.order = [['timestamp', query.order === 'DESC' ? 'DESC' : 'ASC']];
+    if (query.newestFirst) {
+        parsed.order = [['timestamp', 'DESC']];
     }
 
     return parsed;
