@@ -52,10 +52,12 @@ Book.prototype.newJournalEntry = function(memo, date = null) {
  * @param query.startDate {string|number}
  * @param query.endDate {string|number}
  * @param query.memo {string}
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return Promise<JournalEntry[]>
  */
 Book.prototype.getJournalEntries = function(query) {
     const parsedQuery = parseQuery(this.getDataValue('id'), query);
+    parsedQuery.order = parsedQuery.order || [['timestamp', 'ASC']];
     return JournalEntry.findAll(parsedQuery).then(rows => {
         const results = rows.map(r => r.values());
         return results;
@@ -107,7 +109,7 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
 };
 
 /**
- * Return all transactions ordered by time for a given book (subject to the constraints passed in the query)
+ * Return all journal entries ordered by time for a given book (subject to the constraints passed in the query)
  * @param query
  * @param query.startDate {string|number} Anything parseable by new Date()
  * @param query.endDate {string|number} Anything parseable by new Date()
