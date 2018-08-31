@@ -117,7 +117,7 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
  */
 Book.prototype.getLedger = function(query) {
     query = parseQuery(this.get('id'), query);
-    query.order = [['timestamp', 'ASC']];
+    query.order = query.order || [['timestamp', 'ASC']];
     query.include = [ Transaction ];
     return JournalEntry.findAll(query);
 };
@@ -132,7 +132,7 @@ Book.prototype.getLedger = function(query) {
  */
 Book.prototype.getTransactions = function(query) {
     query = parseQuery(this.get('id'), query);
-    query.order = [['timestamp', 'ASC']];
+    query.order = query.order || [['timestamp', 'ASC']];
     return Transaction.findAll(query);
 };
 
@@ -259,6 +259,10 @@ function parseQuery(id, query) {
         parsed.where.memo = {[Op.or]: [query.memo, `${query.memo} [REVERSED]`]};
         delete query.memo;
     }
+    if (query.order) {
+        parsed.order = [['timestamp', query.order === 'DESC' ? 'DESC' : 'ASC']];
+    }
+
     return parsed;
 }
 
