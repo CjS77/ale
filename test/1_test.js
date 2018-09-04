@@ -190,4 +190,15 @@ describe('ALE', () => {
                 assert.equal(result[1].debit, 500);
             });
     });
+
+    it('should return newest transactions first when requested', () => {
+        return bookZAR.getJournalEntries()
+            .then((res) => {
+                assert(new Date(res[0].timestamp) < new Date(res[1].timestamp));
+            })
+            .then(() => bookZAR.getJournalEntries({newestFirst: true}))
+            .then((res) => {
+                assert(new Date(res[0].timestamp) > new Date(res[1].timestamp));
+            });
+    })
 });

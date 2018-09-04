@@ -52,10 +52,12 @@ Book.prototype.newJournalEntry = function(memo, date = null) {
  * @param query.startDate {string|number}
  * @param query.endDate {string|number}
  * @param query.memo {string}
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return Promise<JournalEntry[]>
  */
 Book.prototype.getJournalEntries = function(query) {
     const parsedQuery = parseQuery(this.getDataValue('id'), query);
+    parsedQuery.order = parsedQuery.order || [['timestamp', 'ASC']];
     return JournalEntry.findAll(parsedQuery).then(rows => {
         const results = rows.map(r => r.values());
         return results;
@@ -107,17 +109,18 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
 };
 
 /**
- * Return all transactions ordered by time for a given book (subject to the constraints passed in the query)
+ * Return all journal entries ordered by time for a given book (subject to the constraints passed in the query)
  * @param query
  * @param query.startDate {string|number} Anything parseable by new Date()
  * @param query.endDate {string|number} Anything parseable by new Date()
  * @param query.perPage {number} Limit results to perPage
  * @param query.page {number} Return page number
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return {Array} of JournalEntry
  */
 Book.prototype.getLedger = function(query) {
     query = parseQuery(this.get('id'), query);
-    query.order = [['timestamp', 'ASC']];
+    query.order = query.order || [['timestamp', 'ASC']];
     query.include = [ Transaction ];
     return JournalEntry.findAll(query);
 };
@@ -128,11 +131,12 @@ Book.prototype.getLedger = function(query) {
  * @param query.account {string|Array} A single, or array of accounts to match. Assets will match Assets and Assets:*
  * @param query.perPage {number} Limit results to perPage
  * @param query.page {number} Return page number
- * @return {Array} of JournalEntry
+ * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
+ * @return {Array} of Transaction
  */
 Book.prototype.getTransactions = function(query) {
     query = parseQuery(this.get('id'), query);
-    query.order = [['timestamp', 'ASC']];
+    query.order = query.order || [['timestamp', 'ASC']];
     return Transaction.findAll(query);
 };
 
@@ -259,6 +263,10 @@ function parseQuery(id, query) {
         parsed.where.memo = {[Op.or]: [query.memo, `${query.memo} [REVERSED]`]};
         delete query.memo;
     }
+    if (query.newestFirst) {
+        parsed.order = [['timestamp', 'DESC']];
+    }
+
     return parsed;
 }
 
