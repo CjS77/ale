@@ -189,6 +189,25 @@ paths:
             type: array
             items:
               type: string
+    post:
+      summary: Create a new account
+      description: Creates a new account or returns existing of account already exists
+      operationId: postAccount
+
+      parameters:
+        - name: body
+          in: body
+          description: The new account definition
+          schema:
+            $ref: '#/definitions/NewAccountEntry'
+
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/Response'
 
   '/books/{bookId}/transactions':
     parameters:
@@ -432,6 +451,39 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Transaction'
+
+  NewAccountEntry:
+    type: object
+    required:
+      - accountCode
+      - accountName
+      - toIncrease
+      - bookId
+    properties:
+      accountCode:
+        description: Unique code for the new account
+        type: integer
+      accountName:
+        description: Name for new account
+        type: string
+      toIncrease:
+        description: Posting to increase account
+        type: string
+      accountClassification:
+        description: Is this a 'Balance sheet' or 'P or L' account
+        type: string
+      accountType:
+        description: Which account type? Income, liability etc.
+        type: string
+      subAccountType:
+        description: Which sub-account type? current asset, non-current etc. Also for reporting purposes
+        type: string
+      memo:
+        description: Some description of the account
+        type: string
+      bookId:
+        description: Already created book for account to be linked to
+        type: integer
 
   Balance:
     type: object

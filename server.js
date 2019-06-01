@@ -13,16 +13,24 @@
  *
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
 const app = require('./lib/server');
 const port = process.env.ALE_PORT || 8813;
+const sequelize = require('./models/connection');
 
-app.listen(port, (err) => {
-    if (err) {
-        console.error(err);
-        process.exit(1);
-    }
-    console.log(`Listening on port ${port}`);
-});
+sequelize.sync().then(
+
+    app.listen(port, (err) => {
+        if (err) {
+            console.error(err);
+            process.exit(1);
+        }
+        console.log(`Listening on port ${port}`);
+    })
+);
+
+
 
 process.on('SIGTERM', () => {
     console.log('Shutdown signal received. Bye');

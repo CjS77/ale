@@ -18,26 +18,27 @@ const sequelize = require('./connection');
 const BigNumber = require('bignumber.js');
 const JournalEntry = require('./journal');
 const Transaction = require('./transaction');
-const {ZERO} = require('./types');
-const {AleError, codes} = require('../lib/errors');
+const Account = require('./account');
+const { ZERO } = require('./types');
+const { AleError, codes } = require('../lib/errors');
 const Op = Sequelize.Op;
 
 /**
  * A Book contains many journal entries
  */
 const Book = sequelize.define('book', {
-    name: {type: Sequelize.TEXT, unique: true},
-    quoteCurrency: {type: Sequelize.STRING, defaultValue: 'USD'}
+    name: { type: Sequelize.TEXT, unique: true },
+    quoteCurrency: { type: Sequelize.STRING, defaultValue: 'USD' }
 });
 
-JournalEntry.belongsTo(Book, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'});
-Transaction.belongsTo(Book, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'}); // Redundant, but saves double JOINS in a few queries
-Book.JournalEntries = Book.hasMany(JournalEntry, {foreignKey: {allowNull: false}, onDelete: 'CASCADE'});
+JournalEntry.belongsTo(Book, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
+Transaction.belongsTo(Book, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' }); // Redundant, but saves double JOINS in a few queries
+Book.JournalEntries = Book.hasMany(JournalEntry, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
 
 /**
  * Creates a new journal entry, but doesn't persist it to the DB until entry.commit() is called
  */
-Book.prototype.newJournalEntry = function(memo, date = null) {
+Book.prototype.newJournalEntry = function (memo, date = null) {
     return JournalEntry.build({
         bookId: this.id,
         memo: memo,
@@ -55,7 +56,7 @@ Book.prototype.newJournalEntry = function(memo, date = null) {
  * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return Promise<JournalEntry[]>
  */
-Book.prototype.getJournalEntries = function(query) {
+Book.prototype.getJournalEntries = function (query) {
     const parsedQuery = parseQuery(this.getDataValue('id'), query);
     parsedQuery.order = parsedQuery.order || [['timestamp', 'ASC']];
     return JournalEntry.findAll(parsedQuery).then(rows => {
@@ -77,7 +78,7 @@ Book.prototype.getJournalEntries = function(query) {
  * @param inQuoteCurrency boolean - whether to convert balance to the quote currency or not (default: false)
  * @return {creditTotal, debitTotal, balance, currency, numTransactions}
  */
-Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
+Book.prototype.getBalance = function (query, inQuoteCurrency = false) {
     query = parseQuery(this.getDataValue('id'), query);
     const credit = inQuoteCurrency ? sequelize.literal('credit * "exchangeRate"') : sequelize.col('credit');
     const debit = inQuoteCurrency ? sequelize.literal('debit * "exchangeRate"') : sequelize.col('debit');
@@ -118,10 +119,10 @@ Book.prototype.getBalance = function(query, inQuoteCurrency = false) {
  * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return {Array} of JournalEntry
  */
-Book.prototype.getLedger = function(query) {
+Book.prototype.getLedger = function (query) {
     query = parseQuery(this.get('id'), query);
     query.order = query.order || [['timestamp', 'ASC']];
-    query.include = [ Transaction ];
+    query.include = [Transaction];
     return JournalEntry.findAll(query);
 };
 
@@ -134,13 +135,13 @@ Book.prototype.getLedger = function(query) {
  * @param query.newestFirst {boolean} Order results by desc timestamp, (default : false).
  * @return {Array} of Transaction
  */
-Book.prototype.getTransactions = function(query) {
+Book.prototype.getTransactions = function (query) {
     query = parseQuery(this.get('id'), query);
     query.order = query.order || [['timestamp', 'ASC']];
     return Transaction.findAll(query);
 };
 
-Book.prototype.voidEntry = function(journalId, reason) {
+Book.prototype.voidEntry = function (journalId, reason) {
     return JournalEntry.findById(journalId)
         .then(entry => {
             if (!entry) {
@@ -150,7 +151,7 @@ Book.prototype.voidEntry = function(journalId, reason) {
         });
 };
 
-Book.prototype.listAccounts = function() {
+Book.prototype.listAccounts = function () {
     return Transaction.aggregate('account', 'distinct', {
         where: {
             bookId: this.getDataValue('id')
@@ -171,7 +172,7 @@ Book.prototype.listAccounts = function() {
     });
 };
 
-Book.prototype.markToMarket = function(query, exchangeRates) {
+Book.prototype.markToMarket = function (query, exchangeRates) {
     const rates = Book.normalizeRates(this.quoteCurrency, exchangeRates);
     if (!rates) {
         const err = new AleError('Cannot mark-to-market if no current exchange rates are supplied', codes.MissingInput);
@@ -202,7 +203,7 @@ Book.prototype.markToMarket = function(query, exchangeRates) {
     });
 };
 
-Book.normalizeRates = function(currency, rates) {
+Book.normalizeRates = function (currency, rates) {
     let base = rates[currency];
     if (!base) {
         return null;
@@ -222,7 +223,7 @@ Book.normalizeRates = function(currency, rates) {
  */
 function parseQuery(id, query) {
     let account;
-    const parsed = {where: {bookId: id}};
+    const parsed = { where: { bookId: id } };
     query = query || {};
     if (query.perPage) {
         const perPage = query.perPage || 25;
@@ -231,23 +232,23 @@ function parseQuery(id, query) {
         delete query.perPage;
         delete query.page;
     }
-    
+
     if ((account = query.account)) {
-        
+
         if (account instanceof Array) {
-            let accountList = account.map(a => ({[Op.like]: `${a}%`}));
-            parsed.where.account = {[Op.or]: accountList};
+            let accountList = account.map(a => ({ [Op.like]: `${a}%` }));
+            parsed.where.account = { [Op.or]: accountList };
         }
         else {
-            parsed.where.account = {[Op.like]: `${account}%`};
+            parsed.where.account = { [Op.like]: `${account}%` };
         }
         delete query.account;
     }
-    
+
     if (query.journalEntry) {
         parsed.where.journalEntry = query.journalEntry;
     }
-    
+
     if (query.startDate || query.endDate) {
         parsed.where.timestamp = {};
     }
@@ -260,7 +261,7 @@ function parseQuery(id, query) {
         delete query.endDate;
     }
     if (query.memo) {
-        parsed.where.memo = {[Op.or]: [query.memo, `${query.memo} [REVERSED]`]};
+        parsed.where.memo = { [Op.or]: [query.memo, `${query.memo} [REVERSED]`] };
         delete query.memo;
     }
     if (query.newestFirst) {
@@ -270,8 +271,8 @@ function parseQuery(id, query) {
     return parsed;
 }
 
-Book.listBooks = function() {
-    return Book.findAll({order: ['name']}).then(results => {
+Book.listBooks = function () {
+    return Book.findAll({ order: ['name'] }).then(results => {
         if (!results) {
             return [];
         }
@@ -284,8 +285,8 @@ Book.listBooks = function() {
  * @param name The name of the new book
  * @param quoteCurrency The Base currency for the book. If the book already exists, this parameter must match the existing base currency or be undefined.
  */
-Book.getOrCreateBook = function(name, quoteCurrency) {
-    return Book.findOrCreate({where: {name: name}, defaults: {quoteCurrency: quoteCurrency}})
+Book.getOrCreateBook = function (name, quoteCurrency) {
+    return Book.findOrCreate({ where: { name: name }, defaults: { quoteCurrency: quoteCurrency } })
         .then(result => {
             if (!result || result.length != 2) {
                 return sequelize.Promise.reject(new AleError('Book query failed to return expected result', codes.DatabaseQueryError));
@@ -297,7 +298,7 @@ Book.getOrCreateBook = function(name, quoteCurrency) {
                 const err = new AleError(`Request Base currency does not match existing base currency. Requested: ${quoteCurrency}. Current: ${cur}`, codes.MismatchedCurrency);
                 return sequelize.Promise.reject(err);
             }
-            return {isNew: isNewBook, book: book};
+            return { isNew: isNewBook, book: book };
         });
 };
 
@@ -305,8 +306,8 @@ Book.getOrCreateBook = function(name, quoteCurrency) {
  * Gets an existing, or returns an error
  * @param name The name of the new book
  */
-Book.getBook = function(name) {
-    return Book.findOne({where: {name: name}}).then(book => {
+Book.getBook = function (name) {
+    return Book.findOne({ where: { name: name } }).then(book => {
         if (!book) {
             return sequelize.Promise.reject(new AleError(`Book ${name} does not exist.`, codes.BookDoesNotExist));
         }
@@ -316,7 +317,7 @@ Book.getBook = function(name) {
     });
 };
 
-Book.prototype.values = function() {
+Book.prototype.values = function () {
     return {
         id: this.get('id'),
         name: this.get('name'),

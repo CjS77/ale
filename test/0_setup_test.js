@@ -16,7 +16,8 @@
 const testDB = require('./testDB');
 
 describe('Create the database.', () => {
-    before(done => {
-        testDB.create(done);
+    
+    before((done) => {
+        testDB.create().then(() => {done()});
     });
 });
