@@ -33,7 +33,7 @@ Transaction = sequelize.define('transaction', {
 /**
  * Return instance in native formats
  */
-Transaction.prototype.values = function() {
+Transaction.prototype.values = function () {
     return {
         id: this.getDataValue('id'),
         credit: +this.getDataValue('credit'),

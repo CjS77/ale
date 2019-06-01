@@ -12,22 +12,23 @@
  * License for the specific language governing permissions and limitations under the License.
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
 const { Client } = require('pg');
 const async = require('async');
 const Transaction = require('../models/transaction');
 const Book = require('../models/book');
 const JournalEntry = require('../models/journal');
 
-process.env.ALE_CONNECTION = process.env.ALE_CONNECTION || 'postgres://postgres@localhost/ale-test';
-const masterUri = process.env.MASTER_ALE_CONNECTION || 'postgres://postgres@localhost/postgres';
+const testUri = process.env.TEST_ALE_CONNECTION || 'postgres://postgres@localhost/postgres';
 
 let sequelize = require('../models/connection');
 
 module.exports.create = (done) => {
-    create(masterUri, 'ale-test', done);
+    create(testUri, 'ale-test', done);
 };
 
-module.exports.destroy =  () => {
+module.exports.destroy = () => {
     return sequelize.drop().then(() => {
         return sequelize.close();
     });
@@ -41,13 +42,13 @@ module.exports.clear = () => {
     })
 };
 
-function create(master_uri, db_name, cb) {
+function create(testUri, db_name, cb) {
     const queries = [
         `DROP DATABASE IF EXISTS "${db_name}";`,
         `CREATE DATABASE "${db_name}";`,
         `ALTER DATABASE "${db_name}" SET TIMEZONE TO 'UTC';`
     ];
-    const client = new Client({ connectionString: master_uri });
+    const client = new Client({ connectionString: testUri });
     client.connect();
     async.eachSeries(queries, function(sql, done) {
         client.query(sql, done);

@@ -12,6 +12,8 @@
  * License for the specific language governing permissions and limitations under the License.
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
 const Sequelize = require('sequelize');
 const conn = process.env.ALE_CONNECTION;
 const { AleError, codes } = require('../lib/errors');

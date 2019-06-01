@@ -7,7 +7,7 @@
   "author": "Cayle Sharrock <cayle@coinbase.com>",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "NODE_ENV=test mocha test/*.js",
+    "test": "NODE_ENV=test mocha test/*.js --timeout 10000",
     "deploy": "npm run build && ./deploy-docs.sh",
     "build": "node ./scripts/build.js",
     "swagger": "swagger-repo",
@@ -37,6 +37,7 @@
     "connect": "^3.4.1",
     "cors": "^2.7.1",
     "deploy-to-gh-pages": "^1.1.0",
+    "dotenv": "8.0.0",
     "express": "4.16.2",
     "gulp": "^3.9.1",
     "gulp-connect": "^4.2.0",
