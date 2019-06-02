@@ -277,6 +277,35 @@ paths:
           schema:
             $ref: '#/definitions/Balance'
 
+  '/books/{bookId}/tb':
+    parameters:
+    - name: bookId
+      description: The book to extract tb from
+      in: path
+      type: integer
+      required: true
+    get:
+      summary: Return a tb; list of all accounts and balance
+      operationId: getTb
+      parameters:
+      - name: startDate
+        description: Start date for Profit or Loss account
+        in: query
+        type: string
+        required: true
+      - name: endDate
+        description: End date for  Profit or Loss and Balance sheet
+        in: query
+        type: string
+        required: true
+      produces:
+        - application/json
+      responses: # list of responses
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/Balance'
+
   '/books/{bookId}/marktomarket':
     parameters:
     - name: bookId

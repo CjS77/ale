@@ -44,12 +44,21 @@ Account.getOrCreateBook = function (accountCode, accountName, toIncrease, accoun
       accountCode, accountName, toIncrease, accountClassification, accountType, subAccountType, memo, bookId
     }
   }).then(result => {
-    console.log(result);
-    
     if (result.includes(false)) {
       return sequelize.Promise.reject(new AleError('Account code already exists', codes.DatabaseQueryError));
     }
     return result
+  });
+};
+
+Account.getAccounts = function (id) {
+  return Account.findAll({
+    where: {
+      bookId: id
+    }
+  }).then(results => {
+    
+    return results
   });
 };
 
