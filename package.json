@@ -46,7 +46,7 @@
     "shelljs": "^0.7.0",
     "swagger-repo": "^1.0.0",
     "swagger-routes": "1.7.0",
-    "swagger-ui": "^2.1.4"
+    "swagger-ui": "^3.23.11"
   },
   "devDependencies": {
     "mocha": "^3.5.3",
