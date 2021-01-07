@@ -1,3 +1,5 @@
+# This repo is no longer maintained.
+
 # A=L+E
 Multi-currency double-entry accounting system based on node.js + Sequelize
 
